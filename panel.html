@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Admin Panel</title>
+    <style>
+      body {
+        margin: 0; padding: 0;
+        font-family: 'Open Sans', sans-serif;
+        background-color: #e6ecf0;
+      }
+      .container {
+        margin-top: 30px;
+        display: grid;
+        justify-content: center;
+        grid-template-columns: repeat(auto-fill, 355px);
+        grid-auto-rows: 250px;
+        grid-gap: 20px 20px;
+      }
+      .card {
+        background-color: white;
+      }
+      .card:hover {
+        box-shadow: 0 4px 8px 0 grey, 0 6px 20px 0 grey;
+      }
+      .header {
+        height: 40%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-left: 10px;
+      }
+      .main {
+        height: 60%;
+      }
+      .main button {
+        position: relative;
+        left: 240px;
+        top: 60px;
+        width: 100px;
+        height: 40px;
+        background-color: white;
+      }
+      .main input {
+        position: relative;
+        top: 20px;
+        width: 80%;
+        left: 30px;
+        height: 30px;
+        background-color: white;
+      }
+      .hidden {
+        border: none;
+        background-color: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="container">
+        <div v-for="card in userList" class="card">
+          <div class="header" v-bind:style = "{background: card.background}">
+            <h1>{{ card.title }}</h1>
+          </div>
+          <div class="main">
+              <!-- v-on:submit="postServev-onrInput($event, card)" -->
+            <input v-bind:id="card.id" v-if="card.textbox" type="text" placeholder="Enter Url">
+            <input v-bind:id="card.id" disabled v-else class="hidden">
+            <button type="submit" v-bind:style = "{
+              background: card.isHovering ? card.background : card.default,
+              color: card.isHovering ? card.default : card.background,
+              border: card.style
+            }"
+            @mouseover = "card.isHovering = true"
+            @mouseleave = "card.isHovering = false" name="button" v-on:click="postToserver($event, card)">Run</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+      $("form").submit(function(e) {
+        e.preventDefault();
+      });
+      let socket = io();
+      let count = {count: 1, rdnNum: 0};
+      let colourArray = ["#545454", "#d14341", "#f0528f", "#279ceb", "#049d90", "#4C2A85", "#554640", "#FF6542", "#06D6A0", "#E94F37", "#5C415D", "#EE4B6A", "#DF3B57", "#F5B700", "#04E762", "#00A1E4", "#DC0073", "#34113F"];
+
+      let randomColour = function(array, count) {
+        if (count.count%2!=0) {
+          count.rdnNum = Math.floor(Math.random() * (array.length-1 - 0 + 1)) + 0;
+        }
+        count.count += 1
+        return array[count.rdnNum];
+      }
+
+      let app = new Vue({
+        el: '#app',
+        data: {
+          userList: [
+            {
+              title: "Start URL",
+              name: "openURL",
+              style: `2px solid ${randomColour(colourArray, count)}`,
+              background: randomColour(colourArray, count),
+              textbox: true,
+              isHovering: false,
+              status: "Online",
+              default: "white",
+              id: 1
+            },
+            {
+              title: "Mute",
+              name: "muteVol",
+              style: `2px solid ${randomColour(colourArray, count)}`,
+              background: randomColour(colourArray, count),
+              textbox: false,
+              isHovering: false,
+              status: "Offline",
+              default: "white",
+              id: 2
+            },
+            {
+              title: "Full Volume",
+              name: "maxVol",
+              style: `2px solid ${randomColour(colourArray, count)}`,
+              background: randomColour(colourArray, count),
+              textbox: false,
+              isHovering: false,
+              status: "Offline",
+              default: "white",
+              id: 3
+            },
+            {
+              title: "Kill Application",
+              name: "killAPP",
+              style: `2px solid ${randomColour(colourArray, count)}`,
+              background: randomColour(colourArray, count),
+              textbox: true,
+              isHovering: false,
+              status: "Offline",
+              default: "white",
+              id: 5
+            },
+            {
+              title: "Text to voice",
+              name: "textVoice",
+              style: `2px solid ${randomColour(colourArray, count)}`,
+              background: randomColour(colourArray, count),
+              textbox: true,
+              isHovering: false,
+              status: "Offline",
+              default: "white",
+              id: 6
+            }
+          ]
+        },
+        methods: {
+          // postServerInput: function(e, card) {
+          //   console.log(e)
+          //   e.preventDefault();
+          //   socket.emit('command post', e.target[0].value, card.name)
+          //   e.target[0].value = "";
+          //   return false;
+          // },
+          postToserver: function(e, card) {
+            if(card.textbox) {
+              console.log(card)
+              socket.emit('command post', {
+                value: $(`#${card.id}`).val(),
+                cmd: card.name,
+                target: localStorage.getItem("target")
+              });
+
+              document.getElementById(card.id).value = "";
+              return false;
+            } else {
+              console.log(card)
+              socket.emit('command post', {
+                value: "null",
+                cmd: card.name,
+                target: localStorage.getItem("target")
+              });
+              return false;
+            }
+          }
+        }
+      })
+    </script>
+  </body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Online Panel</title>
+    <style>
+      body {
+        margin: 0; padding: 0;
+        font-family: 'Open Sans', sans-serif;
+        background-color: #e6ecf0;
+      }
+      .container {
+        margin-top: 30px;
+        display: grid;
+        justify-content: center;
+        grid-template-columns: repeat(auto-fill, 355px);
+        grid-auto-rows: 250px;
+        grid-gap: 20px 20px;
+      }
+      .card {
+        background-color: white;
+      }
+      .card:hover {
+        box-shadow: 0 4px 8px 0 grey, 0 6px 20px 0 grey;
+      }
+      .header {
+        height: 40%;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding-left: 10px;
+      }
+      .header h1 {
+        padding-right: 20px;
+        border-right: 2px solid white;
+        margin-right: 5px;
+      }
+      .main {
+        height: 60%;
+      }
+      .main button {
+        position: relative;
+        left: 240px;
+        top: 45px;
+        width: 100px;
+        height: 40px;
+        background-color: white;
+      }
+      .main p {
+        padding-left: 10px
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="container">
+        <div v-for="card in userList" class="card">
+          <div class="header" v-bind:style = "{background: card.background}">
+            <h1>{{ card.name }}</h1>
+            <p>{{ card.ip }}</p>
+          </div>
+          <div class="main">
+            <p>status: <span v-if="card.status == 'Online'" style="color: green;">{{ card.status }}</span><span v-if="card.status == 'Offline'" style="color: red;">{{ card.status }}</span></p>
+            <a v-on:click="computerNameEmit(card)"><button type="button" v-bind:style = "{
+              background: card.isHovering ? card.background : card.default,
+              color: card.isHovering ? card.default : card.background,
+              border: card.style
+            }"
+            @mouseover = "card.isHovering = true"
+            @mouseleave = "card.isHovering = false" name="button">Connect</button></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+      let app = new Vue({
+        el: '#app',
+        data: {
+          userList: [
+          ]
+        },
+        mounted: function(){
+          let socket = io();
+          let vm = this;
+          socket.on('connect', function(asd){
+            socket.on('update UserList', function(serverStatus) {
+              vm.userList = serverStatus
+            })
+          });
+        },
+        methods: {
+          computerNameEmit: function(card) {
+            localStorage.setItem("target", card.name)
+            $(location).attr('href', "http://localhost:3000/adminPanel");
+          }
+        }
+      })
+    </script>
+  </body>
+</html>
